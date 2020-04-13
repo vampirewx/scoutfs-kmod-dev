@@ -850,7 +850,7 @@ static int get_path(struct super_block *sb, struct scoutfs_radix_root *root,
 				level++;
 				continue;
 			}
-			ret = -EIO;
+			ret = WARN_ON_ONCE(-EIO);
 			goto out;
 		}
 		saw_inconsistent = false;
@@ -1030,7 +1030,7 @@ static int get_all_paths(struct super_block *sb,
 				ind = bl->blkno - adding->leaf_bit;
 				if (test_bit_le(ind, rdx->bits)) {
 					/* XXX corruption, bit already set? */
-					ret = -EIO;
+					ret = WARN_ON_ONCE(-EIO);
 					break;
 				}
 
@@ -1404,7 +1404,7 @@ wrapped:
 		    !bitmap_subset((void *)inp_rdx->bits,
 			    	   (void *)src_rdx->bits,
 				   SCOUTFS_RADIX_BITS)) {
-			ret = -EIO;
+			ret = WARN_ON_ONCE(-EIO);
 			goto out;
 		}
 
@@ -1412,7 +1412,7 @@ wrapped:
 		if (bitmap_intersects((void *)dst_rdx->bits,
 				      (void *)inp_rdx->bits,
 				      SCOUTFS_RADIX_BITS)) {
-			ret = -EIO;
+			ret = WARN_ON_ONCE(-EIO);
 			goto out;
 		}
 
