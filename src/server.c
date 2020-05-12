@@ -135,6 +135,8 @@ static int hold_commit(struct super_block *sb)
 	u64 tot;
 	int ret = 0;
 
+	scoutfs_inc_counter(sb, server_commit_hold);
+
 	down_read(&server->commit_rwsem);
 
 	while (!server->prepared_commit) {
@@ -142,6 +144,7 @@ static int hold_commit(struct super_block *sb)
 		down_write(&server->commit_rwsem);
 
 		if (!server->prepared_commit) {
+			scoutfs_inc_counter(sb, server_commit_prepare);
 			BUG_ON(scoutfs_block_writer_dirty_bytes(sb,
 								&server->wri));
 			tot = le64_to_cpu(super->core_meta_freed.ref.sm_total);
@@ -192,6 +195,7 @@ static int apply_commit(struct super_block *sb, int err)
 		cw.ret = 0;
 		init_completion(&cw.comp);
 		llist_add(&cw.node, &server->commit_waiters);
+		scoutfs_inc_counter(sb, server_commit_queue);
 		queue_work(server->wq, &server->commit_work);
 	}
 
@@ -273,8 +277,10 @@ static void scoutfs_server_commit_func(struct work_struct *work)
 	int ret;
 
 	trace_scoutfs_server_commit_work_enter(sb, 0, 0);
+	scoutfs_inc_counter(sb, server_commit_worker);
 
 	down_write(&server->commit_rwsem);
+
 
 	ret = scoutfs_block_writer_write(sb, &server->wri);
 	if (ret) {
