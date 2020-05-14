@@ -213,12 +213,42 @@ static struct scoutfs_dirent *alloc_dirent(unsigned int name_len)
 	return kmalloc(dirent_bytes(name_len), GFP_NOFS);
 }
 
+/*
+ * Generate a 32bit "fingerprint" of the name by extracting 32 evenly
+ * distributed bits from the name.  The intent is to have the sort order
+ * of the fingerprints reflect the sort order of the names while mapping
+ * large names down to small fs keys.
+ */
+static u32 dirent_name_fingerprint(const char *name, unsigned int name_len)
+{
+        unsigned int fp;
+        unsigned int x;
+        unsigned char c;
+        unsigned char b;
+	int name_bits;
+	int wid;
+        int n;
+        int i;
+
+	name_bits = name_len * 8;
+	wid = max(name_bits / 32, 1);
+	fp = 0;
+
+        for (i = 0, n = 0; i < 32 && n < name_bits; i++, n += wid) {
+                c = name[n >> 3];
+                b = c & (1 << (7 - (n & 7)));
+                x = (!!b) << (31 - i);
+
+                fp |= x;
+        }
+
+        return fp;
+}
+
 static u64 dirent_name_hash(const char *name, unsigned int name_len)
 {
-       unsigned int half = (name_len + 1) / 2;
-
-       return crc32c(~0, name, half) |
-              ((u64)crc32c(~0, name + name_len - half, half) << 32);
+       return crc32c(~0, name, name_len) |
+              ((u64)dirent_name_fingerprint(name, name_len) << 32);
 }
 
 static u64 dirent_names_equal(const char *a_name, unsigned int a_len,
