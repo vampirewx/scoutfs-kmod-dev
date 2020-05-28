@@ -65,6 +65,8 @@ int scoutfs_server_lock_recover_request(struct super_block *sb, u64 rid,
 void scoutfs_server_get_fs_roots(struct super_block *sb,
 				 struct scoutfs_btree_root *fs_root,
 				 struct scoutfs_btree_root *logs_root);
+int scoutfs_server_hold_commit(struct super_block *sb);
+int scoutfs_server_apply_commit(struct super_block *sb, int err);
 
 struct sockaddr_in;
 struct scoutfs_quorum_elected_info;
