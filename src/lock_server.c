@@ -782,6 +782,10 @@ static void scoutfs_lock_server_recovery_timeout(struct work_struct *work)
 	u64 rid;
 	int ret;
 
+	ret = scoutfs_server_hold_commit(sb);
+	if (ret)
+		goto out;
+
 	/* we enter recovery if there are any client records */
 	for (rid = 0; ; rid++) {
 		init_lock_clients_key(&key, rid);
@@ -810,7 +814,6 @@ static void scoutfs_lock_server_recovery_timeout(struct work_struct *work)
 		scoutfs_err(sb, "client rid %016llx lock recovery timed out",
 			    rid);
 
-		/* XXX these aren't immediately committed */
 		init_lock_clients_key(&key, rid);
 		ret = scoutfs_btree_delete(sb, inf->alloc, inf->wri,
 					   &super->lock_clients, &key);
@@ -818,6 +821,8 @@ static void scoutfs_lock_server_recovery_timeout(struct work_struct *work)
 			break;
 	}
 
+	ret = scoutfs_server_apply_commit(sb, ret);
+out:
 	/* force processing all pending lock requests */
 	if (ret == 0)
 		ret = finished_recovery(sb, 0, false);
