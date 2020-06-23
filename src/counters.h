@@ -109,6 +109,10 @@
 	EXPAND_COUNTER(server_commit_prepare)			\
 	EXPAND_COUNTER(server_commit_queue)			\
 	EXPAND_COUNTER(server_commit_worker)			\
+	EXPAND_COUNTER(srch_inconsistent_eio)			\
+	EXPAND_COUNTER(srch_inconsistent_ref)			\
+	EXPAND_COUNTER(srch_search_stale_eio)			\
+	EXPAND_COUNTER(srch_search_stale_retry)			\
 	EXPAND_COUNTER(trans_commit_data_alloc_low)		\
 	EXPAND_COUNTER(trans_commit_fsync)			\
 	EXPAND_COUNTER(trans_commit_full)			\
